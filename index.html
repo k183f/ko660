@@ -1,380 +1,228 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>图片管理系统</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>图片展示 - 上传说明</title>
     <style>
-        *{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
-        body{background:#f5f7fa;padding:20px}
-        .container{max-width:1100px;margin:0 auto}
-        .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
-        .header h1{font-size:24px;color:#333}
-        .admin-btn{padding:8px 14px;background:#409eff;color:white;border:none;border-radius:6px;cursor:pointer}
-        
-        /* 上传面板 */
-        .upload-box{background:white;padding:20px;border-radius:12px;margin-bottom:20px;display:none;box-shadow:0 2px 10px rgba(0,0,0,0.08)}
-        .upload-box.show{display:block}
-        .form-item{margin-bottom:12px}
-        .form-item label{display:block;margin-bottom:5px;font-weight:bold}
-        .form-item input{width:100%;padding:8px;border:1px solid #ddd;border-radius:6px}
-        .save-btn{width:100%;padding:12px;background:#409eff;color:white;border:none;border-radius:8px;cursor:pointer;margin-top:6px;}
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 16px;
+            color: #333;
+        }
+        .container {
+            max-width: 640px;
+            margin: 0 auto;
+        }
 
-        /* 进度条 */
-        .progress-wrap{display:none;margin-top:10px;}
-        .progress-bar{width:100%;height:8px;background:#eee;border-radius:4px;overflow:hidden;}
-        .progress-fill{height:100%;width:0%;background:#409eff;transition:width 0.2s ease;}
-        .progress-text{text-align:center;margin-top:4px;font-size:14px;color:#666;}
+        /* 警告横幅 */
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-left: 5px solid #ffc107;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        .warning h2 {
+            font-size: 18px;
+            color: #856404;
+            margin-bottom: 12px;
+        }
+        .warning .icon {
+            font-size: 20px;
+        }
+        .warning ol {
+            padding-left: 20px;
+            font-size: 15px;
+            line-height: 1.8;
+            color: #533f03;
+        }
+        .warning ol li {
+            margin-bottom: 4px;
+        }
 
-        /* 表格 */
-        table{width:100%;background:white;border-collapse:collapse;border-radius:10px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.08)}
-        th,td{padding:12px;text-align:center;border-bottom:1px solid #eee}
-        th{background:#f8f9fa}
-        td img{width:70px;height:70px;object-fit:cover;border-radius:6px;cursor:pointer}
+        /* 信息卡片 */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        .info-item {
+            display: flex;
+            align-items: baseline;
+            font-size: 15px;
+            line-height: 1.8;
+        }
+        .info-item .label {
+            font-weight: 600;
+            color: #d32f2f;
+            min-width: 56px;
+        }
+        .info-item .value {
+            color: #333;
+        }
 
-        /* 按钮 */
-        .btn{padding:6px 10px;border:none;border-radius:5px;color:white;cursor:pointer;margin:2px}
-        .copy{background:#67c23a}
-        .down{background:#ff7d00}
-        .edit{background:#f9ae00}
-        .del{background:#f56c6c}
+        /* 图片卡片 */
+        .image-card {
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .image-card .image-wrapper {
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+        }
+        .image-card .image-wrapper img {
+            width: 100%;
+            display: block;
+        }
+        .image-card .image-wrapper .placeholder {
+            padding: 60px 20px;
+            text-align: center;
+            color: #999;
+            font-size: 14px;
+        }
+        .image-card .image-wrapper .placeholder .big {
+            font-size: 48px;
+            margin-bottom: 8px;
+        }
+        .image-card .caption {
+            padding: 16px 20px;
+        }
+        .image-card .caption .title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #d32f2f;
+        }
+        .image-card .caption .desc {
+            font-size: 14px;
+            line-height: 1.7;
+            color: #555;
+        }
 
-        /* 预览弹窗 */
-        .modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);display:none;justify-content:center;align-items:center;z-index:999}
-        .modal img{max-width:90%;max-height:90vh;border-radius:10px}
+        /* 美团教程卡片 */
+        .tutorial {
+            background: #e8f5e9;
+            border: 1px solid #4caf50;
+            border-left: 5px solid #4caf50;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        .tutorial h2 {
+            font-size: 18px;
+            color: #2e7d32;
+            margin-bottom: 12px;
+        }
+        .tutorial ol {
+            padding-left: 20px;
+            font-size: 15px;
+            line-height: 1.8;
+            color: #1b5e20;
+        }
+        .tutorial ol li {
+            margin-bottom: 4px;
+        }
 
-        /* 登录遮罩层 */
-        .login-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);display:flex;justify-content:center;align-items:center;z-index:9999}
-        .login-box{background:white;padding:40px;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,0.2);text-align:center;width:320px}
-        .login-box h2{margin-bottom:24px;color:#333;font-size:24px}
-        .login-box input{width:100%;padding:12px;border:1px solid #ddd;border-radius:8px;font-size:16px;margin-bottom:16px;text-align:center}
-        .login-box button{width:100%;padding:12px;background:#409eff;color:white;border:none;border-radius:8px;font-size:16px;cursor:pointer}
-        .login-box .error{color:#f56c6c;margin-top:12px;font-size:14px}
+        .footer {
+            text-align: center;
+            font-size: 13px;
+            color: #999;
+            padding: 16px 0 32px;
+        }
     </style>
 </head>
-
 <body>
-<div class="login-overlay" id="loginOverlay">
-    <div class="login-box">
-        <h2>🔐 请输入口令</h2>
-        <input type="password" id="loginPwd" placeholder="输入6位口令">
-        <button id="loginBtn">登录</button>
-        <div class="error" id="loginError"></div>
-    </div>
-</div>
-<div class="container">
-    <div class="header">
-        <h1>🖼️ 图片管理系统</h1>
-        <button class="admin-btn" id="adminBtn">管理员登录</button>
-    </div>
+    <div class="container">
 
-    <div class="upload-box" id="uploadBox">
-        <div class="form-item">
-            <label>🔐 2位查看密码（后台可改）</label>
-            <input type="text" id="viewPwd" maxlength="2" placeholder="设置2位密码">
-        </div>
-        <div class="form-item">
-            <label>🔑 GitHub Token</label>
-            <input type="text" id="githubToken" placeholder="ghp_xxx...">
-        </div>
-        <div class="form-item">
-            <label>📦 GitHub 仓库 (owner/repo)</label>
-            <input type="text" id="githubRepo" placeholder="username/repository">
-        </div>
-        <div class="form-item">
-            <label>美团/京东 图片</label>
-            <input type="file" id="img1" accept="image/*">
-        </div>
-        <div class="form-item">
-            <label>注意（美团/京东）</label>
-            <input type="text" id="note1" placeholder="输入备注">
-        </div>
-        <div class="form-item">
-            <label>蜂鸟 图片</label>
-            <input type="file" id="img2" accept="image/*">
-        </div>
-        <div class="form-item">
-            <label>注意（蜂鸟）</label>
-            <input type="text" id="note2" placeholder="输入备注">
+        <!-- 蜂鸟平台注意事项 -->
+        <div class="warning">
+            <h2><span class="icon">⚠️</span> 蜂鸟平台上传注意事项</h2>
+            <ol>
+                <li>保存到手机相册上传，请勿截图上传会被以非原件驳回</li>
+                <li>上传城市、编号、有效期与证件一致才能审核通过</li>
+            </ol>
         </div>
 
-        <!-- 上传进度条 -->
-        <div class="progress-wrap" id="progressWrap">
-            <div class="progress-bar">
-                <div class="progress-fill" id="progressFill"></div>
+        <!-- 信息 -->
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="label">📍 城市：</span>
+                <span class="value">合肥</span>
             </div>
-            <div class="progress-text" id="progressText">0%</div>
+            <div class="info-item">
+                <span class="label">📝 编号：</span>
+                <span class="value">按照上传图片实际填写</span>
+            </div>
+            <div class="info-item">
+                <span class="label">📅 有效期：</span>
+                <span class="value">按照上传图片实际填写</span>
+            </div>
         </div>
 
-        <button class="save-btn" id="saveBtn">✅ 保存上传</button>
+        <!-- 图片1 -->
+        <div class="image-card">
+            <div class="image-wrapper">
+                <img src="图片1.jpg" alt="图片1" onerror="this.parentElement.innerHTML='<div class=\\'placeholder\\'><div class=\\'big\\'>🖼️</div>请将图片1命名为 <b>图片1.jpg</b> 放在同目录下</div>'" />
+            </div>
+            <div class="caption">
+                <div class="title">📷 图片1</div>
+                <div class="desc">
+                    ⚠️ 蜂鸟平台上传注意事项<br>
+                    1️⃣ 保存到手机相册上传，请勿截图上传会被以非原件驳回<br>
+                    2️⃣ 上传城市、编号、有效期与证件一致才能审核通过<br><br>
+                    📍 城市：合肥<br>
+                    📝 编号：按照上传图片实际填写<br>
+                    📅 有效期：按照上传图片实际填写
+                </div>
+            </div>
+        </div>
+
+        <!-- 图片2 -->
+        <div class="image-card">
+            <div class="image-wrapper">
+                <img src="图片2.jpg" alt="图片2" onerror="this.parentElement.innerHTML='<div class=\\'placeholder\\'><div class=\\'big\\'>🖼️</div>请将图片2命名为 <b>图片2.jpg</b> 放在同目录下</div>'" />
+            </div>
+            <div class="caption">
+                <div class="title">📷 图片2</div>
+                <div class="desc">下面附上说明</div>
+            </div>
+        </div>
+
+        <!-- 美团上传教程 -->
+        <div class="tutorial">
+            <h2>🍜 美团上传教程</h2>
+            <ol>
+                <li>选择电子版</li>
+                <li>保存到本地相册然后上传</li>
+                <li>选择类型：电子</li>
+                <li>填写正确有效期上传即可</li>
+            </ol>
+        </div>
+
+        <div class="footer">
+            将图片命名为 <b>图片1.jpg</b> 和 <b>图片2.jpg</b> 放在同目录下即可显示<br>
+            部署到 GitHub Pages 即可在线访问
+        </div>
+
     </div>
-
-    <table>
-        <thead>
-            <tr>
-                <th>序号</th>
-                <th>美团/京东</th>
-                <th>注意</th>
-                <th>蜂鸟</th>
-                <th>注意</th>
-                <th>操作</th>
-            </tr>
-        </thead>
-        <tbody id="dataList"></tbody>
-    </table>
-</div>
-
-<div class="modal" id="previewModal"></div>
-
-<script>
-const ADMIN_PASSWORD = "86480356";
-const VIEW_PASSWORD = "123456";
-const STORAGE_KEY = "GALLERY_DATA";
-let isAdmin = false;
-
-function checkLogin() {
-    const overlay = document.getElementById("loginOverlay");
-    const pwdInput = document.getElementById("loginPwd");
-    const errorEl = document.getElementById("loginError");
-
-    document.getElementById("loginBtn").onclick = () => {
-        const pwd = pwdInput.value.trim();
-        if (pwd === VIEW_PASSWORD) {
-            overlay.style.display = "none";
-        } else {
-            errorEl.innerText = "口令错误，请重试";
-            pwdInput.value = "";
-        }
-    };
-
-    pwdInput.addEventListener("keyup", (e) => {
-        if (e.key === "Enter") {
-            document.getElementById("loginBtn").click();
-        }
-    });
-}
-
-function getDB() {
-    const data = localStorage.getItem(STORAGE_KEY);
-    return data ? JSON.parse(data) : { viewPwd: "12", list: [] };
-}
-function setDB(db) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
-}
-
-function render() {
-    const db = getDB();
-    const list = db.list;
-    const el = document.getElementById("dataList");
-    el.innerHTML = "";
-    list.forEach((item, index) => {
-        el.innerHTML += `
-        <tr>
-            <td>${index + 1}</td>
-            <td><img src="${item.img1}" onclick="viewImg('${item.img1}')"></td>
-            <td>${item.note1}</td>
-            <td>${item.img2 ? `<img src="${item.img2}" onclick="viewImg('${item.img2}')">` : '-'}</td>
-            <td>${item.note2 || '-'}</td>
-            <td>
-                <button class="btn copy" onclick="copyTwo('${item.note1}','${item.note2}')">复制备注</button>
-                <button class="btn down" onclick="downloadImg('${item.img1}','${item.img2}')">下载</button>
-                ${isAdmin ? `<button class="btn edit" onclick="editItem(${index})">修改</button><button class="btn del" onclick="deleteItem(${index})">删除</button>` : ''}
-            </td>
-        </tr>`;
-    });
-}
-
-function viewImg(url) {
-    const db = getDB();
-    const pwd = prompt("请输入2位查看密码：");
-    if (pwd !== db.viewPwd) return alert("密码错误！");
-    const modal = document.getElementById("previewModal");
-    modal.innerHTML = `<img src="${url}">`;
-    modal.style.display = "flex";
-    modal.onclick = () => modal.style.display = "none";
-}
-
-function copyTwo(n1, n2) {
-    const txt = `美团/京东：${n1}\n蜂鸟：${n2}`;
-    navigator.clipboard.writeText(txt).then(() => alert("复制成功！"));
-}
-
-function downloadImg(img1, img2) {
-    const a = document.createElement("a");
-    a.href = img1; a.download = "美团京东.jpg"; a.click();
-    if (img2) setTimeout(() => { a.href = img2; a.download = "蜂鸟.jpg"; a.click(); }, 500);
-}
-
-function deleteItem(index) {
-    if (!confirm("确定删除？")) return;
-    const db = getDB();
-    db.list.splice(index, 1);
-    setDB(db);
-    render();
-}
-
-function editItem(index) {
-    const db = getDB();
-    const item = db.list[index];
-    const n1 = prompt("修改美团/京东备注", item.note1);
-    const n2 = prompt("修改蜂鸟备注", item.note2);
-    if (n1 === null) return;
-    item.note1 = n1;
-    item.note2 = n2;
-    setDB(db);
-    render();
-}
-
-document.getElementById("adminBtn").onclick = () => {
-    if (isAdmin) {
-        isAdmin = false;
-        uploadBox.classList.remove("show");
-        adminBtn.innerText = "管理员登录";
-        alert("已退出");
-        render();
-        return;
-    }
-    const pwd = prompt("输入管理密码：");
-    if (pwd === ADMIN_PASSWORD) {
-        isAdmin = true;
-        uploadBox.classList.add("show");
-        adminBtn.innerText = "退出管理";
-        viewPwd.value = getDB().viewPwd || "12";
-        alert("登录成功！");
-        render();
-    } else alert("密码错误！");
-};
-
-// ==============================================
-// 上传到GitHub
-// ==============================================
-async function uploadToGitHub(file, token, repo, folder = "images") {
-    const reader = new FileReader();
-    return new Promise((resolve, reject) => {
-        reader.onload = async (e) => {
-            const base64Data = e.target.result.split(",")[1];
-            const fileName = `${Date.now()}-${file.name}`;
-            const path = `${folder}/${fileName}`;
-            const url = `https://api.github.com/repos/${repo}/contents/${path}`;
-
-            try {
-                const response = await fetch(url, {
-                    method: "PUT",
-                    headers: {
-                        "Authorization": `token ${token}`,
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        message: `Upload image: ${fileName}`,
-                        content: base64Data,
-                        branch: "main"
-                    })
-                });
-
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.message || "上传失败");
-                }
-
-                const result = await response.json();
-                const rawUrl = `https://raw.githubusercontent.com/${repo}/main/${path}`;
-                resolve(rawUrl);
-            } catch (e) {
-                reject(e);
-            }
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-    });
-}
-
-// ==============================================
-// 带进度条的上传（你要的功能）
-// ==============================================
-document.getElementById("saveBtn").onclick = async () => {
-    if (!isAdmin) return;
-    const img1 = document.getElementById("img1").files[0];
-    const note1 = document.getElementById("note1").value.trim();
-    const token = document.getElementById("githubToken").value.trim();
-    const repo = document.getElementById("githubRepo").value.trim();
-
-    if (!token || !repo) return alert("请填写GitHub Token和仓库信息！");
-    if (!img1 || !note1) return alert("美团/京东图片和备注不能为空！");
-
-    const pw = document.getElementById("progressWrap");
-    const pf = document.getElementById("progressFill");
-    const pt = document.getElementById("progressText");
-    pw.style.display = "block";
-    setProgress(0);
-
-    try {
-        const db = getDB();
-        db.viewPwd = document.getElementById("viewPwd").value || "12";
-
-        pt.innerText = "上传图片1...";
-        const img1Url = await uploadToGitHub(img1, token, repo);
-        setProgress(50);
-
-        let img2Url = "";
-        if (document.getElementById("img2").files[0]) {
-            pt.innerText = "上传图片2...";
-            img2Url = await uploadToGitHub(document.getElementById("img2").files[0], token, repo);
-        }
-        setProgress(100);
-        pt.innerText = "保存中...";
-
-        db.list.push({
-            note1, note2: document.getElementById("note2").value.trim(),
-            img1: img1Url, img2: img2Url
-        });
-        setDB(db);
-
-        document.getElementById("note1").value = "";
-        document.getElementById("note2").value = "";
-        document.getElementById("img1").value = "";
-        document.getElementById("img2").value = "";
-
-        setTimeout(() => {
-            pw.style.display = "none";
-            pt.innerText = "0%";
-            alert("保存成功！图片已上传到GitHub仓库");
-            render();
-        }, 500);
-    } catch (e) {
-        pw.style.display = "none";
-        pt.innerText = "0%";
-        alert("上传失败：" + e.message);
-    }
-
-    function setProgress(p) {
-        const per = Math.min(100, Math.round(p));
-        pf.style.width = per + "%";
-    }
-}
-
-// 带进度的 Base64（备用）
-function toBase64WithProgress(file, onProgress) {
-    return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (e) => resolve(e.target.result);
-        reader.readAsDataURL(file);
-        let fake = 0;
-        const timer = setInterval(() => {
-            fake += 10;
-            if (fake >= 100) {
-                clearInterval(timer);
-                onProgress(100);
-            } else {
-                onProgress(fake);
-            }
-        }, 60);
-    });
-}
-
-window.onload = () => {
-    checkLogin();
-    render();
-};
-</script>
 </body>
 </html>
