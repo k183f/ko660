@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>上传助手 - 微信上传</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 16px;
+            color: #333;
+        }
+        .container {
+            max-width: 640px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px 0 16px;
+        }
+        .header h1 {
+            font-size: 22px;
+            color: #d32f2f;
+        }
+        .header p {
+            font-size: 14px;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        /* 卡片 */
+        .card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        }
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 14px;
+            color: #333;
+        }
+
+        /* 表单 */
+        .form-group {
+            margin-bottom: 14px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #555;
+            margin-bottom: 4px;
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 15px;
+            outline: none;
+            transition: border 0.2s;
+            background: #fff;
+        }
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: #d32f2f;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        /* 图片上传区域 */
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 12px;
+            padding: 32px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #fafafa;
+            position: relative;
+        }
+        .upload-area:active {
+            background: #f0f0f0;
+        }
+        .upload-area .icon {
+            font-size: 40px;
+            margin-bottom: 8px;
+        }
+        .upload-area .text {
+            font-size: 15px;
+            color: #888;
+        }
+        .upload-area .hint {
+            font-size: 12px;
+            color: #bbb;
+            margin-top: 4px;
+        }
+        .upload-area.has-image {
+            border-color: #4caf50;
+            background: #f1f8e9;
+            padding: 12px;
+        }
+        .upload-area.has-image .icon {
+            font-size: 24px;
+        }
+        .upload-area input[type="file"] {
+            display: none;
+        }
+
+        /* 图片预览 */
+        .preview-list {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .preview-item {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            aspect-ratio: 1;
+            background: #f0f0f0;
+        }
+        .preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .preview-item .remove {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 22px;
+            height: 22px;
+            background: rgba(0,0,0,0.6);
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            font-size: 14px;
+            line-height: 22px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        /* 平台选择 */
+        .platform-tabs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .platform-tab {
+            padding: 12px;
+            text-align: center;
+            border-radius: 8px;
+            border: 2px solid #eee;
+            background: #fff;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .platform-tab.active {
+            border-color: #d32f2f;
+            background: #fff5f5;
+            color: #d32f2f;
+        }
+        .platform-tab .emoji {
+            display: block;
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+
+        /* 提示信息 */
+        .tip-box {
+            background: #e3f2fd;
+            border-radius: 8px;
+            padding: 14px 16px;
+            margin-top: 12px;
+            font-size: 14px;
+            line-height: 1.7;
+            color: #1565c0;
+        }
+        .tip-box.warn {
+            background: #fff3e0;
+            color: #e65100;
+        }
+        .tip-box.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        /* 上传步骤 */
+        .step-list {
+            list-style: none;
+            padding: 0;
+        }
+        .step-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .step-list li:last-child {
+            border-bottom: none;
+        }
+        .step-list .num {
+            flex-shrink: 0;
+            width: 24px;
+            height: 24px;
+            background: #d32f2f;
+            color: #fff;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 24px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .step-list .num.green {
+            background: #4caf50;
+        }
+
+        /* 提交按钮 */
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: #d32f2f;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-submit:active {
+            background: #b71c1c;
+        }
+        .btn-submit:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* 结果弹窗 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        .modal-overlay.show {
+            display: flex;
+        }
+        .modal {
+            background: #fff;
+            border-radius: 16px;
+            padding: 28px 24px 20px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+        .modal .big-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+        .modal h3 {
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+        .modal .summary {
+            text-align: left;
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 14px;
+            margin: 14px 0;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+        .modal .summary .row {
+            display: flex;
+            justify-content: space-between;
+        }
+        .modal .summary .row .lbl {
+            color: #888;
+        }
+        .modal .summary .row .val {
+            font-weight: 500;
+        }
+        .modal .btn-close {
+            padding: 10px 32px;
+            background: #d32f2f;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: #bbb;
+            padding: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <div class="header">
+            <h1>📤 上传助手</h1>
+            <p>填写信息 → 选择图片 → 通过微信上传</p>
+        </div>
+
+        <!-- 选择平台 -->
+        <div class="card">
+            <div class="card-title">选择平台</div>
+            <div class="platform-tabs">
+                <div class="platform-tab active" data-platform="fengniao" onclick="selectPlatform('fengniao')">
+                    <span class="emoji">🐦</span>
+                    蜂鸟平台
+                </div>
+                <div class="platform-tab" data-platform="meituan" onclick="selectPlatform('meituan')">
+                    <span class="emoji">🍜</span>
+                    美团
+                </div>
+            </div>
+            <div id="platformTip" class="tip-box">
+                ⚠️ 保存到手机相册上传，请勿截图上传会被以非原件驳回
+            </div>
+        </div>
+
+        <!-- 填写信息 -->
+        <div class="card">
+            <div class="card-title">📋 填写信息</div>
+            <div class="form-group">
+                <label>📍 城市</label>
+                <input type="text" id="city" value="合肥" placeholder="输入城市" />
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>📝 编号</label>
+                    <input type="text" id="idNumber" placeholder="按图片实际填写" />
+                </div>
+                <div class="form-group">
+                    <label>📅 有效期</label>
+                    <input type="text" id="validity" placeholder="按图片实际填写" />
+                </div>
+            </div>
+        </div>
+
+        <!-- 选择图片 -->
+        <div class="card">
+            <div class="card-title">🖼️ 选择图片</div>
+            <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+                <div class="icon">📷</div>
+                <div class="text">点击选择图片</div>
+                <div class="hint">支持 JPG / PNG 格式</div>
+                <input type="file" id="fileInput" accept="image/*" multiple onchange="handleFiles(this.files)" />
+            </div>
+            <div class="preview-list" id="previewList"></div>
+        </div>
+
+        <!-- 上传步骤 -->
+        <div class="card" id="stepCard">
+            <div class="card-title">📌 上传步骤</div>
+            <ul class="step-list" id="stepList">
+                <li><span class="num">1</span>选择电子版</li>
+                <li><span class="num">2</span>保存到本地相册然后上传</li>
+                <li><span class="num">3</span>选择类型：电子</li>
+                <li><span class="num">4</span>填写正确有效期上传即可</li>
+            </ul>
+        </div>
+
+        <!-- 提交 -->
+        <button class="btn-submit" id="submitBtn" onclick="showResult()">
+            ✅ 生成上传摘要
+        </button>
+
+        <!-- 结果弹窗 -->
+        <div class="modal-overlay" id="resultModal">
+            <div class="modal">
+                <div class="big-icon">📤</div>
+                <h3>上传摘要</h3>
+                <div class="summary" id="resultSummary"></div>
+                <p style="font-size:13px;color:#888;margin-bottom:16px;">
+                    请按照以上信息在微信中上传
+                </p>
+                <button class="btn-close" onclick="closeModal()">知道了</button>
+            </div>
+        </div>
+
+        <div class="footer">
+            将图片保存到手机相册 → 打开微信上传
+        </div>
+
+    </div>
+
+    <script>
+        let selectedPlatform = 'fengniao';
+        let files = [];
+
+        function selectPlatform(platform) {
+            selectedPlatform = platform;
+            document.querySelectorAll('.platform-tab').forEach(el => {
+                el.classList.toggle('active', el.dataset.platform === platform);
+            });
+            const tip = document.getElementById('platformTip');
+            const stepList = document.getElementById('stepList');
+            if (platform === 'fengniao') {
+                tip.className = 'tip-box';
+                tip.innerHTML = '⚠️ 保存到手机相册上传，请勿截图上传会被以非原件驳回';
+                stepList.innerHTML = `
+                    <li><span class="num">1</span>保存图片到手机相册</li>
+                    <li><span class="num">2</span>打开蜂鸟平台上传承诺书</li>
+                    <li><span class="num">3</span>上传城市选择 <b>合肥</b></li>
+                    <li><span class="num">4</span>编号、有效期与证件一致才能审核通过</li>
+                `;
+            } else {
+                tip.className = 'tip-box success';
+                tip.innerHTML = '✅ 美团上传：选择电子版，保存到相册后上传';
+                stepList.innerHTML = `
+                    <li><span class="num green">1</span>选择电子版</li>
+                    <li><span class="num green">2</span>保存到本地相册然后上传</li>
+                    <li><span class="num green">3</span>选择类型：电子</li>
+                    <li><span class="num green">4</span>填写正确有效期上传即可</li>
+                `;
+            }
+        }
+
+        function handleFiles(newFiles) {
+            for (let i = 0; i < newFiles.length; i++) {
+                files.push(newFiles[i]);
+            }
+            renderPreviews();
+            updateUploadArea();
+        }
+
+        function renderPreviews() {
+            const container = document.getElementById('previewList');
+            container.innerHTML = '';
+            files.forEach((file, index) => {
+                const reader = new FileReader();
+                const item = document.createElement('div');
+                item.className = 'preview-item';
+                item.innerHTML = `<button class="remove" onclick="removeFile(${index})">×</button>`;
+                const img = document.createElement('img');
+                reader.onload = e => { img.src = e.target.result; };
+                reader.readAsDataURL(file);
+                item.appendChild(img);
+                container.appendChild(item);
+            });
+        }
+
+        function removeFile(index) {
+            files.splice(index, 1);
+            renderPreviews();
+            updateUploadArea();
+        }
+
+        function updateUploadArea() {
+            const area = document.getElementById('uploadArea');
+            const icon = area.querySelector('.icon');
+            const text = area.querySelector('.text');
+            const hint = area.querySelector('.hint');
+            if (files.length > 0) {
+                area.classList.add('has-image');
+                icon.textContent = '✅';
+                text.textContent = `已选择 ${files.length} 张图片`;
+                hint.textContent = '点击继续添加';
+            } else {
+                area.classList.remove('has-image');
+                icon.textContent = '📷';
+                text.textContent = '点击选择图片';
+                hint.textContent = '支持 JPG / PNG 格式';
+            }
+        }
+
+        function showResult() {
+            const city = document.getElementById('city').value || '合肥';
+            const idNum = document.getElementById('idNumber').value || '(未填写)';
+            const validity = document.getElementById('validity').value || '(未填写)';
+            const platformName = selectedPlatform === 'fengniao' ? '🐦 蜂鸟平台' : '🍜 美团';
+
+            let summary = `
+                <div class="row"><span class="lbl">平台</span><span class="val">${platformName}</span></div>
+                <div class="row"><span class="lbl">📍 城市</span><span class="val">${city}</span></div>
+                <div class="row"><span class="lbl">📝 编号</span><span class="val">${idNum}</span></div>
+                <div class="row"><span class="lbl">📅 有效期</span><span class="val">${validity}</span></div>
+                <div class="row"><span class="lbl">🖼️ 图片</span><span class="val">${files.length} 张</span></div>
+            `;
+
+            if (files.length === 0) {
+                summary += `<div style="color:#e65100;margin-top:8px;">⚠️ 尚未选择图片</div>`;
+            }
+
+            document.getElementById('resultSummary').innerHTML = summary;
+            document.getElementById('resultModal').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('resultModal').classList.remove('show');
+        }
+
+        // 点击遮罩关闭
+        document.getElementById('resultModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+    </script>
+</body>
+</html>
