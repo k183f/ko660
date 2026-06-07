@@ -82,6 +82,39 @@
             gap: 12px;
         }
 
+        /* GitHub Token 输入 */
+        .token-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .token-row input {
+            flex: 1;
+        }
+        .token-row .btn-save {
+            padding: 10px 16px;
+            background: #24292e;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .token-row .btn-save:active {
+            background: #111;
+        }
+        .token-status {
+            font-size: 13px;
+            margin-top: 6px;
+        }
+        .token-status.ok {
+            color: #2e7d32;
+        }
+        .token-status.err {
+            color: #d32f2f;
+        }
+
         /* 图片上传区域 */
         .upload-area {
             border: 2px dashed #ccc;
@@ -238,6 +271,41 @@
             background: #4caf50;
         }
 
+        /* 进度条 */
+        .progress-bar {
+            display: none;
+            margin-bottom: 16px;
+        }
+        .progress-bar.show {
+            display: block;
+        }
+        .progress-track {
+            width: 100%;
+            height: 6px;
+            background: #eee;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: #4caf50;
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+        .progress-text {
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+        }
+        .progress-text.error {
+            color: #d32f2f;
+        }
+        .progress-text.success {
+            color: #2e7d32;
+        }
+
         /* 提交按钮 */
         .btn-submit {
             width: 100%;
@@ -308,6 +376,17 @@
         .modal .summary .row .val {
             font-weight: 500;
         }
+        .modal .image-url {
+            display: block;
+            word-break: break-all;
+            font-size: 12px;
+            color: #1565c0;
+            background: #e3f2fd;
+            padding: 8px 10px;
+            border-radius: 6px;
+            margin-top: 6px;
+            text-decoration: none;
+        }
         .modal .btn-close {
             padding: 10px 32px;
             background: #d32f2f;
@@ -331,7 +410,7 @@
 
         <div class="header">
             <h1>📤 上传助手</h1>
-            <p>填写信息 → 选择图片 → 通过微信上传</p>
+            <p>填写信息 → 选择图片 → 自动上传到仓库</p>
         </div>
 
         <!-- 选择平台 -->
@@ -349,6 +428,25 @@
             </div>
             <div id="platformTip" class="tip-box">
                 ⚠️ 保存到手机相册上传，请勿截图上传会被以非原件驳回
+            </div>
+        </div>
+
+        <!-- GitHub 配置 -->
+        <div class="card">
+            <div class="card-title">🔑 GitHub 配置</div>
+            <div class="form-group">
+                <label>仓库</label>
+                <input type="text" id="repoOwner" value="k183f" placeholder="Owner" style="width:40%;display:inline-block;" />
+                <span style="padding:0 4px;font-size:18px;">/</span>
+                <input type="text" id="repoName" value="ko660" placeholder="Repo" style="width:50%;display:inline-block;" />
+            </div>
+            <div class="form-group">
+                <label>Personal Access Token</label>
+                <div class="token-row">
+                    <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" />
+                    <button class="btn-save" onclick="saveToken()">保存</button>
+                </div>
+                <div class="token-status" id="tokenStatus"></div>
             </div>
         </div>
 
@@ -383,45 +481,67 @@
             <div class="preview-list" id="previewList"></div>
         </div>
 
-        <!-- 上传步骤 -->
-        <div class="card" id="stepCard">
-            <div class="card-title">📌 上传步骤</div>
-            <ul class="step-list" id="stepList">
-                <li><span class="num">1</span>选择电子版</li>
-                <li><span class="num">2</span>保存到本地相册然后上传</li>
-                <li><span class="num">3</span>选择类型：电子</li>
-                <li><span class="num">4</span>填写正确有效期上传即可</li>
-            </ul>
+        <!-- 进度条 -->
+        <div class="progress-bar" id="progressBar">
+            <div class="progress-track">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text" id="progressText">准备上传...</div>
         </div>
 
         <!-- 提交 -->
-        <button class="btn-submit" id="submitBtn" onclick="showResult()">
-            ✅ 生成上传摘要
+        <button class="btn-submit" id="submitBtn" onclick="startUpload()">
+            🚀 提交并上传到仓库
         </button>
 
         <!-- 结果弹窗 -->
         <div class="modal-overlay" id="resultModal">
             <div class="modal">
-                <div class="big-icon">📤</div>
-                <h3>上传摘要</h3>
+                <div class="big-icon" id="resultIcon">📤</div>
+                <h3 id="resultTitle">上传结果</h3>
                 <div class="summary" id="resultSummary"></div>
-                <p style="font-size:13px;color:#888;margin-bottom:16px;">
-                    请按照以上信息在微信中上传
+                <p style="font-size:13px;color:#888;margin-bottom:16px;" id="resultFooter">
+                    图片已上传到仓库，可在页面中查看
                 </p>
                 <button class="btn-close" onclick="closeModal()">知道了</button>
             </div>
         </div>
 
         <div class="footer">
-            将图片保存到手机相册 → 打开微信上传
+            选择图片 → 自动提交到 GitHub 仓库
         </div>
 
     </div>
 
     <script>
+        const GITHUB_API = 'https://api.github.com';
         let selectedPlatform = 'fengniao';
         let files = [];
 
+        // ---------- 页面加载时读取已保存的 Token ----------
+        window.addEventListener('DOMContentLoaded', () => {
+            const saved = localStorage.getItem('github_token');
+            if (saved) {
+                document.getElementById('githubToken').value = saved;
+                document.getElementById('tokenStatus').innerHTML = '✅ Token 已保存';
+                document.getElementById('tokenStatus').className = 'token-status ok';
+            }
+        });
+
+        // ---------- Token 保存 ----------
+        function saveToken() {
+            const token = document.getElementById('githubToken').value.trim();
+            if (!token) {
+                document.getElementById('tokenStatus').innerHTML = '⚠️ 请输入 Token';
+                document.getElementById('tokenStatus').className = 'token-status err';
+                return;
+            }
+            localStorage.setItem('github_token', token);
+            document.getElementById('tokenStatus').innerHTML = '✅ Token 已保存到本地';
+            document.getElementById('tokenStatus').className = 'token-status ok';
+        }
+
+        // ---------- 平台切换 ----------
         function selectPlatform(platform) {
             selectedPlatform = platform;
             document.querySelectorAll('.platform-tab').forEach(el => {
@@ -450,6 +570,7 @@
             }
         }
 
+        // ---------- 文件处理 ----------
         function handleFiles(newFiles) {
             for (let i = 0; i < newFiles.length; i++) {
                 files.push(newFiles[i]);
@@ -498,25 +619,167 @@
             }
         }
 
-        function showResult() {
+        // ---------- GitHub API ----------
+        function readFileAsBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const base64 = reader.result.split(',')[1];
+                    resolve(base64);
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function commitFileToRepo(token, owner, repo, path, content, message) {
+            const url = `${GITHUB_API}/repos/${owner}/${repo}/contents/${path}`;
+
+            // 先尝试获取已有文件（获取 sha）
+            let sha = null;
+            try {
+                const getRes = await fetch(url, {
+                    headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
+                });
+                if (getRes.ok) {
+                    const data = await getRes.json();
+                    sha = data.sha;
+                }
+            } catch (e) { /* 文件不存在，忽略 */ }
+
+            const body = { message, content, branch: 'master' };
+            if (sha) body.sha = sha;
+
+            const res = await fetch(url, {
+                method: 'PUT',
+                headers: {
+                    Authorization: `token ${token}`,
+                    Accept: 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
+            });
+
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.message || `HTTP ${res.status}`);
+            }
+            return res.json();
+        }
+
+        // ---------- 主上传流程 ----------
+        function setProgress(pct, text, cls) {
+            document.getElementById('progressBar').classList.add('show');
+            document.getElementById('progressFill').style.width = pct + '%';
+            const el = document.getElementById('progressText');
+            el.textContent = text;
+            el.className = 'progress-text' + (cls ? ' ' + cls : '');
+        }
+
+        async function startUpload() {
+            const token = document.getElementById('githubToken').value.trim();
+            const owner = document.getElementById('repoOwner').value.trim() || 'k183f';
+            const repo = document.getElementById('repoName').value.trim() || 'ko660';
+
+            // 校验 Token
+            if (!token) {
+                document.getElementById('tokenStatus').innerHTML = '⚠️ 请先输入并保存 GitHub Token';
+                document.getElementById('tokenStatus').className = 'token-status err';
+                return;
+            }
+
+            // 校验图片
+            if (files.length === 0) {
+                setProgress(0, '⚠️ 请至少选择一张图片', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ 上传中...';
+
             const city = document.getElementById('city').value || '合肥';
             const idNum = document.getElementById('idNumber').value || '(未填写)';
             const validity = document.getElementById('validity').value || '(未填写)';
+
+            // 生成时间戳目录名
+            const now = new Date();
+            const ts = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
+            const folder = `uploads/${ts}`;
+
+            let uploadedUrls = [];
+            let successCount = 0;
+
+            try {
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    const ext = file.name.split('.').pop() || 'jpg';
+                    const fileName = `图片${i + 1}.${ext}`;
+                    const path = `${folder}/${fileName}`;
+
+                    setProgress(
+                        Math.round((i / files.length) * 90),
+                        `正在上传 (${i + 1}/${files.length}): ${fileName}`
+                    );
+
+                    const base64 = await readFileAsBase64(file);
+                    const msg = `Upload ${fileName} - 城市:${city} 编号:${idNum} 有效期:${validity}`;
+                    await commitFileToRepo(token, owner, repo, path, base64, msg);
+
+                    const url = `https://${owner}.github.io/${repo}/${path}`;
+                    uploadedUrls.push({ name: fileName, url });
+                    successCount++;
+                }
+
+                setProgress(100, `✅ 上传完成！共 ${successCount} 张图片`, 'success');
+
+                // 展示结果
+                showResult(true, uploadedUrls, city, idNum, validity);
+
+            } catch (err) {
+                setProgress(0, `❌ 上传失败: ${err.message}`, 'error');
+                showResult(false, uploadedUrls, city, idNum, validity, err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🚀 提交并上传到仓库';
+            }
+        }
+
+        // ---------- 结果展示 ----------
+        function showResult(success, uploadedUrls, city, idNum, validity, errorMsg) {
             const platformName = selectedPlatform === 'fengniao' ? '🐦 蜂鸟平台' : '🍜 美团';
 
-            let summary = `
+            const icon = document.getElementById('resultIcon');
+            const title = document.getElementById('resultTitle');
+            const footer = document.getElementById('resultFooter');
+            const summary = document.getElementById('resultSummary');
+
+            if (success) {
+                icon.textContent = '✅';
+                title.textContent = '上传成功！';
+                footer.textContent = '图片已提交到仓库，可在以下链接查看';
+            } else {
+                icon.textContent = '❌';
+                title.textContent = '上传失败';
+                footer.textContent = errorMsg || '请检查 Token 和网络后重试';
+            }
+
+            let html = `
                 <div class="row"><span class="lbl">平台</span><span class="val">${platformName}</span></div>
                 <div class="row"><span class="lbl">📍 城市</span><span class="val">${city}</span></div>
                 <div class="row"><span class="lbl">📝 编号</span><span class="val">${idNum}</span></div>
                 <div class="row"><span class="lbl">📅 有效期</span><span class="val">${validity}</span></div>
-                <div class="row"><span class="lbl">🖼️ 图片</span><span class="val">${files.length} 张</span></div>
+                <div class="row"><span class="lbl">🖼️ 上传</span><span class="val">${uploadedUrls.length} 张</span></div>
             `;
 
-            if (files.length === 0) {
-                summary += `<div style="color:#e65100;margin-top:8px;">⚠️ 尚未选择图片</div>`;
+            if (uploadedUrls.length > 0) {
+                html += `<div style="margin-top:10px;border-top:1px solid #eee;padding-top:10px;font-size:13px;font-weight:600;color:#333;">图片链接：</div>`;
+                uploadedUrls.forEach(item => {
+                    html += `<a class="image-url" href="${item.url}" target="_blank">${item.name}</a>`;
+                });
             }
 
-            document.getElementById('resultSummary').innerHTML = summary;
+            summary.innerHTML = html;
             document.getElementById('resultModal').classList.add('show');
         }
 
